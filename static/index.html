@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trendly Support</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#242019;
+    --paper:#EFEAE0;
+    --panel:#1C1A17;
+    --thread:#B4402C;
+    --mustard:#D9A441;
+    --line: rgba(36,32,25,0.16);
+    --paper-soft:#F6F2E9;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--panel);
+    color:var(--ink);
+    font-family:'Fraunces', Georgia, serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+  }
+  .app{
+    width:100%;
+    max-width:560px;
+    height:100vh;
+    max-height:900px;
+    background:var(--paper);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    box-shadow:0 30px 80px rgba(0,0,0,0.45);
+  }
+  @media (min-width:600px){
+    .app{ height:88vh; margin:24px 0; border-radius:2px; overflow:hidden;}
+  }
+
+  /* ---- header: garment swing-tag ---- */
+  header{
+    background:var(--panel);
+    color:var(--paper);
+    padding:22px 24px 20px;
+    position:relative;
+  }
+  .tag{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .tag-hole{
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid var(--mustard);
+    flex:none;
+  }
+  .wordmark{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    font-size:28px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .wordmark span{color:var(--thread);}
+  .tagline{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--mustard);
+    margin-top:4px;
+    padding-left:26px;
+  }
+  header::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:0; height:1px;
+    background:repeating-linear-gradient(90deg, var(--mustard) 0 6px, transparent 6px 12px);
+    opacity:.55;
+  }
+
+  /* ---- thread ---- */
+  #thread{
+    flex:1;
+    overflow-y:auto;
+    padding:22px 20px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    background:
+      radial-gradient(ellipse at top, var(--paper-soft), var(--paper) 55%);
+  }
+  .row{ display:flex; }
+  .row.user{ justify-content:flex-end; }
+  .bubble{
+    max-width:82%;
+    padding:12px 15px;
+    font-size:15.5px;
+    line-height:1.5;
+    position:relative;
+  }
+  .row.assistant .bubble{
+    background:var(--paper-soft);
+    border:1px solid var(--line);
+    border-radius:2px 12px 12px 12px;
+  }
+  .row.assistant .bubble::before{
+    content:"";
+    position:absolute; left:-1px; top:10px; bottom:10px; width:3px;
+    background:var(--thread);
+  }
+  .row.user .bubble{
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:12px 2px 12px 12px;
+    font-family:'Barlow Condensed', sans-serif;
+    font-size:17px;
+    font-weight:500;
+    letter-spacing:0.01em;
+  }
+  .meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:#8b7f6a;
+    margin:2px 4px 0;
+  }
+  .row.user + .meta, .row.user .meta { text-align:right; }
+
+  .typing{
+    display:inline-flex; gap:4px; padding:4px 2px;
+  }
+  .typing i{
+    width:6px;height:6px;border-radius:50%;background:var(--thread);
+    animation: bob 1s infinite ease-in-out;
+    opacity:.6;
+  }
+  .typing i:nth-child(2){animation-delay:.15s;}
+  .typing i:nth-child(3){animation-delay:.3s;}
+  @keyframes bob{ 0%,80%,100%{transform:translateY(0);} 40%{transform:translateY(-4px);} }
+
+  /* ---- composer ---- */
+  form{
+    display:flex; gap:10px;
+    padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+    background:var(--paper-soft);
+    border-top:1px solid var(--line);
+  }
+  input[type=text]{
+    flex:1;
+    border:1px solid var(--line);
+    background:var(--paper);
+    padding:12px 14px;
+    font-family:'Fraunces', Georgia, serif;
+    font-size:15px;
+    border-radius:2px;
+    color:var(--ink);
+  }
+  input[type=text]:focus{ outline:2px solid var(--thread); outline-offset:1px; }
+  button{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    font-size:14px;
+    background:var(--thread);
+    color:var(--paper);
+    border:none;
+    padding:0 20px;
+    border-radius:2px;
+    cursor:pointer;
+  }
+  button:disabled{ opacity:.5; cursor:default; }
+  button:focus-visible{ outline:2px solid var(--mustard); outline-offset:2px; }
+
+  .starter{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:#8b7f6a;
+    text-align:center;
+    padding:6px 20px 0;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .typing i{ animation:none; }
+  }
+
+  /* ---- tool trace ("what I checked") ---- */
+  .trace{
+    margin-top:6px;
+    max-width:82%;
+  }
+  .trace summary{
+    list-style:none;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:#8b7f6a;
+    padding:3px 4px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    user-select:none;
+  }
+  .trace summary::-webkit-details-marker{ display:none; }
+  .trace summary::before{
+    content:"›";
+    display:inline-block;
+    transition:transform .15s ease;
+    font-size:13px;
+    color:var(--thread);
+  }
+  .trace[open] summary::before{ transform:rotate(90deg); }
+  .trace summary:hover{ color:var(--ink); }
+  .trace-body{
+    margin-top:4px;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .trace-step{
+    background:var(--paper-soft);
+    border:1px solid var(--line);
+    border-left:3px solid var(--mustard);
+    padding:7px 10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    line-height:1.5;
+    color:var(--ink);
+    border-radius:2px;
+  }
+  .trace-step .name{ font-weight:600; color:var(--thread); }
+  .trace-step .args{ color:#8b7f6a; }
+
+  .badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:2px 7px;
+    border-radius:20px;
+    margin-left:4px;
+    vertical-align:middle;
+  }
+  .badge.verified{ background:rgba(65,140,90,0.15); color:#3c7a51; }
+  .badge.escalated{ background:rgba(180,64,44,0.14); color:var(--thread); }
+
+  .row.assistant{ animation: rise .25s ease both; }
+  .row.user{ animation: rise .2s ease both; }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .row.assistant, .row.user{ animation:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="tag">
+        <div class="tag-hole"></div>
+        <div>
+          <div class="wordmark">TREN<span>DLY</span></div>
+        </div>
+      </div>
+      <div class="tagline">Support &middot; 9am&ndash;9pm IST, every day</div>
+    </header>
+
+    <div id="thread"></div>
+    <div class="starter" id="starter">Try: "Where's my order TR-4525?" &middot; "Can I return TR-4527?"</div>
+
+    <form id="composer">
+      <input id="input" type="text" placeholder="Tell us what's up…" autocomplete="off" />
+      <button id="send" type="submit">Send</button>
+    </form>
+  </div>
+
+<script>
+  const thread = document.getElementById('thread');
+  const form = document.getElementById('composer');
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('send');
+  const starter = document.getElementById('starter');
+  let sessionId = null;
+
+  function friendlyToolName(name){
+    return name.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function addBubble(role, text, trace){
+    const row = document.createElement('div');
+    row.className = 'row ' + role;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    // Small status badge when the trace shows a verified customer or an escalation
+    if(trace && trace.length){
+      const escalated = trace.some(t => /escalat/i.test(t.tool));
+      const verified = trace.some(t => /identify_customer/i.test(t.tool));
+      if(escalated){
+        const b = document.createElement('span');
+        b.className = 'badge escalated';
+        b.textContent = 'Escalated';
+        bubble.appendChild(b);
+      } else if(verified){
+        const b = document.createElement('span');
+        b.className = 'badge verified';
+        b.textContent = 'Verified';
+        bubble.appendChild(b);
+      }
+    }
+
+    row.appendChild(bubble);
+    thread.appendChild(row);
+
+    // Collapsible "what I checked" trace panel, right under the assistant's reply
+    if(role === 'assistant' && trace && trace.length){
+      const details = document.createElement('details');
+      details.className = 'trace';
+      const summary = document.createElement('summary');
+      summary.textContent = 'What I checked (' + trace.length + ')';
+      details.appendChild(summary);
+      const body = document.createElement('div');
+      body.className = 'trace-body';
+      trace.forEach(step => {
+        const div = document.createElement('div');
+        div.className = 'trace-step';
+        const argsStr = Object.keys(step.arguments || {}).length
+          ? JSON.stringify(step.arguments) : '{}';
+        div.innerHTML = '<span class="name">' + friendlyToolName(step.tool) + '</span> '
+          + '<span class="args">' + argsStr + '</span>';
+        body.appendChild(div);
+      });
+      details.appendChild(body);
+      thread.appendChild(details);
+    }
+
+    thread.scrollTop = thread.scrollHeight;
+    return bubble;
+  }
+
+  function addTyping(){
+    const row = document.createElement('div');
+    row.className = 'row assistant';
+    row.id = 'typing-row';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble typing';
+    bubble.innerHTML = '<i></i><i></i><i></i>';
+    row.appendChild(bubble);
+    thread.appendChild(row);
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  function removeTyping(){
+    const row = document.getElementById('typing-row');
+    if(row) row.remove();
+  }
+
+  addBubble('assistant', "Hi, I'm the Trendly support assistant. What's your email or phone number on the account, so I can pull up your orders?");
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if(!text) return;
+    starter.style.display = 'none';
+    addBubble('user', text);
+    input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+    addTyping();
+
+    try{
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: text, session_id: sessionId})
+      });
+      const data = await res.json();
+      removeTyping();
+      if(!res.ok){
+        addBubble('assistant', "Something went wrong on our end (" + (data.detail || res.status) + "). Please try again in a moment.");
+      } else {
+        sessionId = data.session_id;
+        addBubble('assistant', data.reply, data.trace);
+      }
+    } catch(err){
+      removeTyping();
+      addBubble('assistant', "I couldn't reach the server. Please check your connection and try again.");
+    } finally {
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  });
+</script>
+</body>
+</html>
