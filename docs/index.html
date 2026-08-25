@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trendly Support Agent — Yellow.ai FDE Screening Assignment</title>
+<meta name="description" content="A tool-calling support agent built on real order data and policy — architecture, guardrails, and a live-scripted trace of how it thinks." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:        #10131A;
+    --ink-2:      #171B24;
+    --ink-3:      #1F2530;
+    --paper:      #EDEFE8;
+    --paper-soft: #F7F8F3;
+    --paper-line: rgba(16,19,26,0.13);
+    --ink-line:   rgba(237,239,232,0.14);
+    --ink-line-strong: rgba(237,239,232,0.26);
+
+    --brand:      #2F8F89;
+    --brand-soft: rgba(47,143,137,0.14);
+    --brand-ink:  #1F6864;
+
+    --amber:      #E0993B;
+    --amber-soft: rgba(224,153,59,0.15);
+    --green:      #3FA772;
+    --green-soft: rgba(63,167,114,0.15);
+    --red:        #C4462F;
+    --red-soft:   rgba(196,70,47,0.14);
+
+    --text-ink:   #11141B;
+    --muted-ink:  rgba(17,20,27,0.60);
+    --faint-ink:  rgba(17,20,27,0.38);
+    --text-paper: #EDEFE8;
+    --muted-paper:rgba(237,239,232,0.64);
+    --faint-paper:rgba(237,239,232,0.40);
+
+    --display: 'Space Grotesk', 'Inter', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+
+    --radius: 3px;
+    --radius-lg: 6px;
+    --maxw: 1120px;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--text-ink);
+    font-family:var(--body);
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{ display:block; max-width:100%; }
+  a{ color:inherit; }
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 28px; }
+  section{ position:relative; }
+  ::selection{ background:var(--brand); color:var(--paper); }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px; border-radius:50%;
+    background:var(--brand);
+    flex:none;
+  }
+  .on-ink .eyebrow{ color:var(--faint-paper); }
+  .on-paper .eyebrow{ color:var(--faint-ink); }
+
+  h1,h2,h3{
+    font-family:var(--display);
+    font-weight:600;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .h2{
+    font-size:clamp(28px, 4vw, 42px);
+    line-height:1.08;
+    font-weight:600;
+    margin:14px 0 0;
+  }
+  .lede{
+    font-size:18px;
+    line-height:1.6;
+    max-width:640px;
+    margin:16px 0 0;
+  }
+  .on-ink .lede{ color:var(--muted-paper); }
+  .on-paper .lede{ color:var(--muted-ink); }
+
+  header.topnav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+    background:rgba(16,19,26,0.72);
+    backdrop-filter:blur(10px) saturate(140%);
+    border-bottom:1px solid var(--ink-line);
+  }
+  .brandmark{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    color:var(--text-paper);
+    text-decoration:none;
+  }
+  .brandmark .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--brand);
+    box-shadow:0 0 0 3px var(--brand-soft);
+  }
+  .navlinks{ display:flex; gap:26px; align-items:center; }
+  .navlinks a{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--muted-paper);
+    text-decoration:none;
+    transition:color .15s ease;
+  }
+  .navlinks a:hover{ color:var(--text-paper); }
+  .navlinks .cta{
+    color:var(--ink);
+    background:var(--brand);
+    padding:7px 13px;
+    border-radius:20px;
+    text-transform:none;
+    letter-spacing:0;
+    font-family:var(--mono);
+    font-weight:500;
+  }
+  @media (max-width:760px){ .navlinks a:not(.cta){ display:none; } }
+
+  .dotnav{
+    position:fixed; right:26px; top:50%; transform:translateY(-50%);
+    z-index:40;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .dotnav a{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--faint-ink);
+    border:1px solid transparent;
+    display:block;
+    transition:background .2s ease, transform .2s ease;
+  }
+  .dotnav a:hover, .dotnav a.active{
+    background:var(--brand);
+    transform:scale(1.35);
+  }
+  @media (max-width:900px){ .dotnav{ display:none; } }
+
+  .hero{
+    background:
+      radial-gradient(ellipse 900px 500px at 78% -10%, rgba(47,143,137,0.20), transparent 60%),
+      var(--ink);
+    color:var(--text-paper);
+    padding:150px 0 96px;
+    overflow:hidden;
+  }
+  .hero .wrap{ position:relative; }
+  .hero-badges{
+    display:flex; flex-wrap:wrap; gap:8px;
+    margin-top:28px;
+  }
+  .badge{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:0.02em;
+    padding:6px 11px;
+    border-radius:20px;
+    border:1px solid var(--ink-line-strong);
+    color:var(--muted-paper);
+  }
+  h1.hero-title{
+    font-size:clamp(38px, 6vw, 68px);
+    line-height:1.03;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    max-width:15ch;
+    margin:18px 0 0;
+  }
+  h1.hero-title .accent{ color:var(--brand); }
+  .hero-cta{
+    display:flex; flex-wrap:wrap; gap:12px;
+    margin-top:34px;
+  }
+  .btn{
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:0.01em;
+    padding:12px 20px;
+    border-radius:24px;
+    text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease;
+    border:1px solid transparent;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn-primary{ background:var(--brand); color:#0B1512; font-weight:600; }
+  .btn-primary:hover{ background:#3AA39C; }
+  .btn-ghost{
+    border-color:var(--ink-line-strong);
+    color:var(--text-paper);
+  }
+  .btn-ghost:hover{ border-color:var(--brand); color:var(--brand); }
+
+  .trace-strip{
+    margin-top:64px;
+    border:1px solid var(--ink-line);
+    border-radius:var(--radius-lg);
+    background:rgba(255,255,255,0.02);
+    padding:22px 26px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    position:relative;
+  }
+  .trace-node{
+    display:flex; flex-direction:column; gap:6px;
+    align-items:center;
+    text-align:center;
+    flex:1;
+    position:relative;
+    z-index:2;
+  }
+  .trace-node .ring{
+    width:13px; height:13px; border-radius:50%;
+    border:2px solid var(--ink-line-strong);
+    background:var(--ink-2);
+    position:relative;
+  }
+  .trace-node .lbl{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--faint-paper);
+  }
+  .trace-track{
+    position:absolute; left:36px; right:36px; top:29px; height:2px;
+    background:var(--ink-line);
+    z-index:1;
+  }
+  .trace-pulse{
+    position:absolute; top:-3px; left:0;
+    width:8px; height:8px; border-radius:50%;
+    background:var(--brand);
+    box-shadow:0 0 12px 2px var(--brand-soft);
+    animation:travel 6s linear infinite;
+  }
+  @keyframes travel{
+    0%{ left:0%; opacity:0; }
+    5%{ opacity:1; }
+    45%{ left:calc(100% - 8px); opacity:1; }
+    50%{ opacity:0; }
+    100%{ opacity:0; left:0%; }
+  }
+  @media (prefers-reduced-motion: reduce){ .trace-pulse{ animation:none; opacity:0; } }
+  @media (max-width:700px){
+    .trace-strip{ flex-wrap:wrap; }
+    .trace-track{ display:none; }
+  }
+
+  .band{ padding:104px 0; }
+  .band.ink{ background:var(--ink); color:var(--text-paper); }
+  .band.paper{ background:var(--paper); color:var(--text-ink); }
+  .band.paper-soft{ background:var(--paper-soft); color:var(--text-ink); }
+  @media (max-width:700px){ .band{ padding:72px 0; } }
+
+  .section-head{ max-width:680px; }
+
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1px;
+    margin:52px 0 0;
+    background:var(--paper-line);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+  }
+  .stat-cell{ background:var(--paper-soft); padding:28px 24px; }
+  .stat-num{ font-family:var(--display); font-size:38px; font-weight:700; letter-spacing:-0.01em; }
+  .stat-lbl{ font-family:var(--mono); font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted-ink); margin-top:6px; }
+  @media (max-width:700px){ .stat-row{ grid-template-columns:1fr; } }
+
+  .checklist{
+    margin:52px 0 0;
+    display:grid;
+    gap:1px;
+    background:var(--paper-line);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+  }
+  .check-row{
+    background:var(--paper-soft);
+    padding:16px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .check-row .left{ display:flex; align-items:center; gap:14px; }
+  .check-row .tick{
+    width:20px; height:20px; border-radius:50%;
+    background:var(--green-soft);
+    color:var(--green);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; flex:none;
+  }
+  .check-row .txt{ font-size:15px; }
+  .check-row a{ font-family:var(--mono); font-size:11.5px; color:var(--brand-ink); text-decoration:none; letter-spacing:0.02em; white-space:nowrap; }
+  .check-row a:hover{ text-decoration:underline; }
+
+  .layer-stack{ margin-top:56px; display:grid; gap:14px; }
+  .layer-card{
+    border:1px solid var(--ink-line);
+    border-radius:var(--radius-lg);
+    background:var(--ink-2);
+    padding:26px 28px;
+    display:grid;
+    grid-template-columns:180px 1fr 200px;
+    gap:24px;
+    align-items:center;
+  }
+  .layer-card .lname{ font-family:var(--display); font-size:18px; font-weight:600; }
+  .layer-card .lfile{ font-family:var(--mono); font-size:11px; color:var(--brand); margin-top:6px; display:block; }
+  .layer-card .ldesc{ font-size:14.5px; color:var(--muted-paper); line-height:1.6; }
+  .meter{ display:flex; flex-direction:column; gap:6px; }
+  .meter-bar{ height:6px; border-radius:4px; background:var(--ink-3); position:relative; overflow:hidden; }
+  .meter-fill{ position:absolute; top:0; left:0; bottom:0; background:linear-gradient(90deg, var(--brand), var(--amber)); border-radius:4px; }
+  .meter-lbl{ font-family:var(--mono); font-size:10px; letter-spacing:0.04em; text-transform:uppercase; color:var(--faint-paper); display:flex; justify-content:space-between; }
+  @media (max-width:820px){ .layer-card{ grid-template-columns:1fr; gap:14px; } }
+
+  .sim-shell{
+    margin-top:52px;
+    display:grid;
+    grid-template-columns:260px 1fr;
+    gap:0;
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+    background:var(--paper-soft);
+  }
+  .sim-chips{ padding:22px; border-right:1px solid var(--paper-line); display:flex; flex-direction:column; gap:8px; background:var(--paper); }
+  .sim-chip{
+    font-family:var(--body);
+    font-size:13.5px;
+    text-align:left;
+    padding:12px 14px;
+    border-radius:var(--radius);
+    border:1px solid var(--paper-line);
+    background:var(--paper-soft);
+    cursor:pointer;
+    color:var(--text-ink);
+    transition:border-color .15s ease, background .15s ease;
+    line-height:1.4;
+  }
+  .sim-chip:hover{ border-color:var(--brand); }
+  .sim-chip.active{ background:var(--ink); color:var(--text-paper); border-color:var(--ink); }
+  .sim-stage{ padding:26px 28px; min-height:360px; display:flex; flex-direction:column; }
+  .sim-scenario-lbl{ font-family:var(--mono); font-size:11px; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted-ink); margin-bottom:16px; }
+  .sim-bubble-row{ display:flex; justify-content:flex-end; margin-bottom:16px; }
+  .sim-bubble-user{ background:var(--ink); color:var(--paper); padding:10px 15px; border-radius:12px 2px 12px 12px; font-size:14.5px; max-width:70%; }
+  .sim-trace{ display:flex; flex-direction:column; gap:7px; margin-bottom:18px; }
+  .sim-step{
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:9px 12px;
+    border-radius:var(--radius);
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-left:3px solid var(--brand);
+    opacity:0;
+    transform:translateY(4px);
+    animation:step-in .35s ease forwards;
+    color:var(--text-ink);
+  }
+  .sim-step .fn{ color:var(--brand-ink); font-weight:600; }
+  .sim-step .res{ color:var(--muted-ink); }
+  @keyframes step-in{ to{ opacity:1; transform:translateY(0); } }
+  .sim-reply-row{ display:flex; justify-content:flex-start; margin-top:auto; }
+  .sim-bubble-reply{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-left:3px solid var(--brand);
+    padding:14px 16px;
+    border-radius:2px 12px 12px 12px;
+    font-size:14.5px;
+    max-width:80%;
+    opacity:0;
+    animation:step-in .4s ease forwards;
+  }
+  .sim-badge{ display:inline-block; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; padding:3px 9px; border-radius:20px; margin-bottom:8px; }
+  .sim-badge.verified{ background:var(--green-soft); color:#2C7A55; }
+  .sim-badge.escalated{ background:var(--red-soft); color:var(--red); }
+  .sim-badge.declined{ background:var(--amber-soft); color:#9C6321; }
+  .sim-hint{ font-family:var(--mono); font-size:11px; color:var(--faint-ink); margin-top:18px; }
+  @media (max-width:760px){
+    .sim-shell{ grid-template-columns:1fr; }
+    .sim-chips{ border-right:none; border-bottom:1px solid var(--paper-line); flex-direction:row; overflow-x:auto; }
+    .sim-chip{ white-space:nowrap; }
+  }
+
+  .proof-card{
+    margin-top:44px;
+    border:1px solid var(--ink-line);
+    border-radius:var(--radius-lg);
+    background:var(--ink-2);
+    padding:26px 28px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+  .proof-col .k{ font-family:var(--mono); font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--faint-paper); margin-bottom:8px; display:block; }
+  .proof-col .v{ font-size:14.5px; color:var(--muted-paper); line-height:1.55; }
+  .proof-col .v.win{ color:var(--green); }
+  .proof-test{ margin-top:16px; font-family:var(--mono); font-size:11px; color:var(--brand); display:flex; align-items:center; gap:7px; }
+  .proof-test::before{ content:"✓"; }
+  @media (max-width:700px){ .proof-card{ grid-template-columns:1fr; } }
+
+  .rules-grid{
+    margin-top:36px;
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:1px;
+    background:var(--ink-line);
+    border:1px solid var(--ink-line);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+  }
+  .rule-cell{ background:var(--ink-2); padding:20px 22px; font-size:14px; color:var(--muted-paper); line-height:1.55; }
+  @media (max-width:700px){ .rules-grid{ grid-template-columns:1fr; } }
+
+  .order-grid{
+    margin-top:48px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
+    gap:1px;
+    background:var(--paper-line);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+  }
+  .order-cell{ background:var(--paper-soft); padding:18px 18px; }
+  .order-id{ font-family:var(--mono); font-size:12px; color:var(--brand-ink); font-weight:600; }
+  .order-outcome{ font-size:13.5px; color:var(--muted-ink); margin-top:6px; line-height:1.45; }
+
+  .stack-grid{ margin-top:52px; display:grid; grid-template-columns:1fr 1.3fr; gap:48px; }
+  .stack-badges{ display:flex; flex-wrap:wrap; gap:9px; align-content:flex-start; }
+  .stack-badge{ font-family:var(--mono); font-size:12px; padding:8px 13px; border:1px solid var(--paper-line); border-radius:var(--radius); background:var(--paper-soft); }
+  .tradeoff{ margin-bottom:20px; }
+  .tradeoff .decision{ font-family:var(--display); font-weight:600; font-size:15.5px; }
+  .tradeoff .reason{ font-size:14px; color:var(--muted-ink); margin-top:4px; }
+  .limits{ margin-top:36px; padding-top:20px; border-top:1px solid var(--paper-line); }
+  .limits .k{ font-family:var(--mono); font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--faint-ink); margin-bottom:10px; display:block; }
+  .limits ul{ margin:0; padding-left:18px; }
+  .limits li{ font-size:13.5px; color:var(--muted-ink); margin-bottom:6px; }
+  @media (max-width:760px){ .stack-grid{ grid-template-columns:1fr; gap:32px; } }
+
+  .qlist{ margin-top:48px; display:flex; flex-direction:column; gap:0; }
+  .qitem{ display:grid; grid-template-columns:44px 1fr; gap:18px; padding:22px 0; border-bottom:1px solid var(--paper-line); }
+  .qitem:first-child{ border-top:1px solid var(--paper-line); }
+  .qnum{ font-family:var(--mono); font-size:13px; color:var(--brand-ink); }
+  .qtext{ font-size:15.5px; line-height:1.6; max-width:640px; }
+
+  .closing{ background:var(--ink); color:var(--text-paper); padding:110px 0 60px; text-align:center; }
+  .closing h2{ font-family:var(--display); font-size:clamp(30px,5vw,48px); font-weight:700; max-width:14ch; margin:0 auto; letter-spacing:-0.01em; }
+  .closing .lede{ margin:18px auto 0; text-align:center; }
+  .closing .hero-cta{ justify-content:center; margin-top:36px; }
+  footer{
+    margin-top:90px;
+    padding-top:26px;
+    border-top:1px solid var(--ink-line);
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--faint-paper);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+
+  .reveal{ opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion: reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <a class="brandmark" href="#top"><span class="dot"></span>TRENDLY // AGENT</a>
+  <nav class="navlinks">
+    <a href="#architecture">Architecture</a>
+    <a href="#flow">Flow</a>
+    <a href="#guardrails">Guardrails</a>
+    <a href="#testing">Tests</a>
+    <a class="cta" href="https://github.com/gaurimk/trendly-agent" target="_blank" rel="noopener">Source ↗</a>
+  </nav>
+</header>
+
+<nav class="dotnav" id="dotnav">
+  <a href="#problem" title="The brief"></a>
+  <a href="#architecture" title="Architecture"></a>
+  <a href="#flow" title="Flow"></a>
+  <a href="#guardrails" title="Guardrails"></a>
+  <a href="#testing" title="Testing"></a>
+  <a href="#stack" title="Stack"></a>
+</nav>
+
+<section class="hero on-ink" id="top">
+  <div class="wrap">
+    <span class="eyebrow">Yellow.ai — FDE Intern screening assignment</span>
+    <h1 class="hero-title">An agent that knows what it <span class="accent">doesn't</span> know.</h1>
+    <p class="lede">A tool-calling support assistant built on a fashion retailer's real order data and return policy — it answers what it can prove, and hands off cleanly what it can't.</p>
+
+    <div class="hero-badges">
+      <span class="badge">FastAPI</span>
+      <span class="badge">Groq · openai/gpt-oss-120b</span>
+      <span class="badge">Python 3.11</span>
+      <span class="badge">29 automated tests</span>
+      <span class="badge">Free-tier only</span>
+    </div>
+
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#" id="live-demo-link" target="_blank" rel="noopener">Open live demo →</a>
+      <a class="btn btn-ghost" href="https://github.com/gaurimk/trendly-agent" target="_blank" rel="noopener">Read the code</a>
+    </div>
+
+    <div class="trace-strip">
+      <div class="trace-track"><div class="trace-pulse"></div></div>
+      <div class="trace-node"><div class="ring"></div><div class="lbl">Message</div></div>
+      <div class="trace-node"><div class="ring"></div><div class="lbl">Identify</div></div>
+      <div class="trace-node"><div class="ring"></div><div class="lbl">Tool call</div></div>
+      <div class="trace-node"><div class="ring"></div><div class="lbl">Guardrail</div></div>
+      <div class="trace-node"><div class="ring"></div><div class="lbl">Reply</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="band paper" id="problem">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">The brief</span>
+      <h2 class="h2">2,000 chats a day. Most of them the same.</h2>
+      <p class="lede">Trendly is a direct-to-consumer fashion retailer. Roughly 70% of its support volume is repetitive — order status, returns and exchanges, shipping and refund policy. The job: handle that volume end to end, and hand off the rest cleanly.</p>
+    </div>
+
+    <div class="stat-row reveal">
+      <div class="stat-cell"><div class="stat-num">2,000</div><div class="stat-lbl">Support chats / day</div></div>
+      <div class="stat-cell"><div class="stat-num">~70%</div><div class="stat-lbl">Repetitive volume</div></div>
+      <div class="stat-cell"><div class="stat-num">10</div><div class="stat-lbl">Fixed test orders</div></div>
+    </div>
+
+    <div class="checklist reveal">
+      <div class="check-row"><div class="left"><span class="tick">✓</span><span class="txt">Look up an order and explain status in plain language, including edge cases</span></div><a href="#testing">see it tested →</a></div>
+      <div class="check-row"><div class="left"><span class="tick">✓</span><span class="txt">Answer policy questions grounded only in the provided policy document</span></div><a href="#guardrails">see the rule →</a></div>
+      <div class="check-row"><div class="left"><span class="tick">✓</span><span class="txt">Decide return/exchange eligibility by combining order data with policy</span></div><a href="#architecture">see the layer →</a></div>
+      <div class="check-row"><div class="left"><span class="tick">✓</span><span class="txt">Escalate to a human with a summary a person could actually use</span></div><a href="#flow">see it happen →</a></div>
+      <div class="check-row"><div class="left"><span class="tick">✓</span><span class="txt">Refuse what it shouldn't — no invented policy, no data leakage</span></div><a href="#guardrails">see it refuse →</a></div>
+    </div>
+  </div>
+</section>
+
+<section class="band ink" id="architecture">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow on-ink">How it's built</span>
+      <h2 class="h2">Code decides. The model narrates.</h2>
+      <p class="lede">The single biggest risk in a support agent is asking a language model to compute eligibility from raw data. So it never does — four layers, each with exactly one job.</p>
+    </div>
+
+    <div class="layer-stack reveal">
+      <div class="layer-card">
+        <div><div class="lname">Data layer</div><span class="lfile">data_store.py · policy_store.py</span></div>
+        <div class="ldesc">Loads the fixed order data and policy doc, read-only. No lookup succeeds without a matching customer_id — this is the actual anti-leakage boundary, not a prompt instruction.</div>
+        <div class="meter"><div class="meter-lbl"><span>Code</span><span>Model</span></div><div class="meter-bar"><div class="meter-fill" style="width:100%; background:var(--brand);"></div></div></div>
+      </div>
+      <div class="layer-card">
+        <div><div class="lname">Rules layer</div><span class="lfile">rules.py</span></div>
+        <div class="ldesc">Plain Python computes return eligibility, refund routing, and delay status directly from policy's stated thresholds — not an LLM judgment call.</div>
+        <div class="meter"><div class="meter-lbl"><span>Code</span><span>Model</span></div><div class="meter-bar"><div class="meter-fill" style="width:100%; background:var(--brand);"></div></div></div>
+      </div>
+      <div class="layer-card">
+        <div><div class="lname">Tool layer</div><span class="lfile">tools.py</span></div>
+        <div class="ldesc">Nine functions with JSON schemas — the only interface the model has to the data. customer_id is never a model-settable argument in any schema.</div>
+        <div class="meter"><div class="meter-lbl"><span>Code</span><span>Model</span></div><div class="meter-bar"><div class="meter-fill" style="width:55%;"></div></div></div>
+      </div>
+      <div class="layer-card">
+        <div><div class="lname">Orchestration layer</div><span class="lfile">agent.py</span></div>
+        <div class="ldesc">A bounded ReAct loop (max 6 tool calls per turn) against Groq's function calling. If it somehow loops past that budget, it fails closed into a human escalation.</div>
+        <div class="meter"><div class="meter-lbl"><span>Code</span><span>Model</span></div><div class="meter-bar"><div class="meter-fill" style="width:25%; background:var(--amber);"></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band paper-soft" id="flow">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">See it think</span>
+      <h2 class="h2">Every reply comes with a receipt.</h2>
+      <p class="lede">The live app shows exactly which tools ran before it answers. This is a scripted walkthrough of four real scenarios from the fixed dataset — click one to run it.</p>
+    </div>
+
+    <div class="sim-shell reveal">
+      <div class="sim-chips" id="sim-chips"></div>
+      <div class="sim-stage" id="sim-stage"></div>
+    </div>
+    <p class="sim-hint">Scripted from the actual dataset and system prompt — not a live model call.</p>
+  </div>
+</section>
+
+<section class="band ink" id="guardrails">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow on-ink">What it won't do</span>
+      <h2 class="h2">The model can't leak what it can't reach.</h2>
+      <p class="lede">customer_id never appears as an argument in any tool schema. It's injected server-side, only after identify_customer succeeds — there's nothing for a prompt injection to override.</p>
+    </div>
+
+    <div class="proof-card reveal">
+      <div class="proof-col">
+        <span class="k">Attempted</span>
+        <div class="v">Forge <code>customer_id=C-101</code> inside a tool call, after identifying as C-100.</div>
+      </div>
+      <div class="proof-col">
+        <span class="k">Result</span>
+        <div class="v win">Session identity (C-100) used instead. Forged value silently overridden, not trusted.</div>
+        <div class="proof-test">test_model_supplied_customer_id_is_ignored_not_trusted — passing</div>
+      </div>
+    </div>
+
+    <div class="rules-grid reveal">
+      <div class="rule-cell">No invented discounts, coupons, or waivers — only the policy-defined ₹250 delay credit exists.</div>
+      <div class="rule-cell">No bank details collected in chat — cash-on-delivery refunds route to a human over a secure link.</div>
+      <div class="rule-cell">No cross-customer order details, even if the person insists it's theirs.</div>
+      <div class="rule-cell">No policy invented where the document is silent — it says so, and offers a human agent.</div>
+    </div>
+  </div>
+</section>
+
+<section class="band paper" id="testing">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Proven against the data</span>
+      <h2 class="h2">29 tests. Ten orders. Zero live calls.</h2>
+      <p class="lede">The deterministic core — eligibility, refunds, auth boundaries — is tested offline with zero dependency on Groq or FastAPI, so it runs anywhere without an API key.</p>
+    </div>
+
+    <div class="stat-row reveal">
+      <div class="stat-cell"><div class="stat-num">29</div><div class="stat-lbl">Automated tests</div></div>
+      <div class="stat-cell"><div class="stat-num">10/10</div><div class="stat-lbl">Fixed orders covered</div></div>
+      <div class="stat-cell"><div class="stat-num">0</div><div class="stat-lbl">API key required</div></div>
+    </div>
+
+    <div class="order-grid reveal">
+      <div class="order-cell"><div class="order-id">TR-4521</div><div class="order-outcome">In transit — not yet delivered, no return possible</div></div>
+      <div class="order-cell"><div class="order-id">TR-4522</div><div class="order-outcome">Mixed categories — partial eligibility</div></div>
+      <div class="order-cell"><div class="order-id">TR-4523</div><div class="order-outcome">Outside the 30-day return window</div></div>
+      <div class="order-cell"><div class="order-id">TR-4524</div><div class="order-outcome">Partially shipped — no second shipping fee</div></div>
+      <div class="order-cell"><div class="order-id">TR-4525</div><div class="order-outcome">Delayed — qualifies for ₹250 credit</div></div>
+      <div class="order-cell"><div class="order-id">TR-4526</div><div class="order-outcome">Lost in transit — escalates, not a return</div></div>
+      <div class="order-cell"><div class="order-id">TR-4527</div><div class="order-outcome">Jewellery — non-returnable category</div></div>
+      <div class="order-cell"><div class="order-id">TR-4528</div><div class="order-outcome">Final sale — size exchange only</div></div>
+      <div class="order-cell"><div class="order-id">TR-4529</div><div class="order-outcome">Cancelled — no return can be raised</div></div>
+      <div class="order-cell"><div class="order-id">TR-4530</div><div class="order-outcome">Clean happy path</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="band paper-soft" id="stack">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Stack &amp; decisions</span>
+      <h2 class="h2">Built to run free, explained honestly.</h2>
+    </div>
+
+    <div class="stack-grid reveal">
+      <div>
+        <div class="stack-badges">
+          <span class="stack-badge">FastAPI</span>
+          <span class="stack-badge">Groq · openai/gpt-oss-120b</span>
+          <span class="stack-badge">Python 3.11</span>
+          <span class="stack-badge">Vanilla JS UI</span>
+          <span class="stack-badge">Render (free tier)</span>
+          <span class="stack-badge">In-memory sessions</span>
+        </div>
+        <div class="limits">
+          <span class="k">Known limitations</span>
+          <ul>
+            <li>No real authentication — email/phone match only</li>
+            <li>Business-day math has no holiday calendar</li>
+            <li>Escalation queue is in-memory, single-process</li>
+            <li>No fallback LLM provider if Groq rate-limits</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="tradeoff">
+          <div class="decision">Deterministic rules over LLM reasoning</div>
+          <div class="reason">Near-zero hallucination risk on eligibility, refunds, and delay status — the cases that matter most to get right.</div>
+        </div>
+        <div class="tradeoff">
+          <div class="decision">Keyword search over a vector DB</div>
+          <div class="reason">The policy doc is ~1,500 words and static — embeddings would be over-engineering for this scope.</div>
+        </div>
+        <div class="tradeoff">
+          <div class="decision">In-memory sessions over Redis</div>
+          <div class="reason">Right-sized for this assignment; wouldn't survive a restart or multi-instance scaling in production.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band paper" id="questions">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Before building this for real</span>
+      <h2 class="h2">Five questions I'd ask Trendly's ops team.</h2>
+    </div>
+    <div class="qlist reveal">
+      <div class="qitem"><div class="qnum">01</div><div class="qtext">What's the authoritative "current time" source in production, and how should date-dependent logic be recalculated if an order's timestamps are corrected after the fact?</div></div>
+      <div class="qitem"><div class="qnum">02</div><div class="qtext">What does real identity verification look like today, and what's the minimum viable version the agent should require before discussing order details?</div></div>
+      <div class="qitem"><div class="qnum">03</div><div class="qtext">Is there a public holiday calendar or region-specific business-day definition that should feed into delay and dispatch calculations?</div></div>
+      <div class="qitem"><div class="qnum">04</div><div class="qtext">What does the human-agent handoff look like operationally — which ticketing system should the escalation payload match, and what SLA applies?</div></div>
+      <div class="qitem"><div class="qnum">05</div><div class="qtext">At real volume — 2,000 chats a day — what's the expected peak concurrent load, and is there budget for a paid LLM tier beyond the free-tier limits used here?</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="closing">
+  <div class="wrap">
+    <span class="eyebrow on-ink" style="justify-content:center;">Take a look</span>
+    <h2>Built to be read, run, and questioned.</h2>
+    <p class="lede">Every design decision is written down. Every claim is testable.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#" id="live-demo-link-2" target="_blank" rel="noopener">Open live demo →</a>
+      <a class="btn btn-ghost" href="https://github.com/gaurimk/trendly-agent" target="_blank" rel="noopener">View source</a>
+    </div>
+    <footer>
+      <span>Built for Yellow.ai's FDE Intern screening assignment · Aug 2026</span>
+      <span>gaurimk/trendly-agent</span>
+    </footer>
+  </div>
+</section>
+
+<script>
+  const LIVE_URL = "https://trendly-agent-epy3.onrender.com";
+  document.getElementById('live-demo-link').href = LIVE_URL;
+  document.getElementById('live-demo-link-2').href = LIVE_URL;
+
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold:0.12 });
+  revealEls.forEach(el=>io.observe(el));
+
+  const dotLinks = document.querySelectorAll('#dotnav a');
+  const dotSections = Array.from(dotLinks).map(a=>document.querySelector(a.getAttribute('href')));
+  function updateDots(){
+    let idx = 0;
+    dotSections.forEach((sec, i)=>{
+      if(sec && sec.getBoundingClientRect().top < window.innerHeight*0.5) idx = i;
+    });
+    dotLinks.forEach((a,i)=> a.classList.toggle('active', i===idx));
+  }
+  window.addEventListener('scroll', updateDots, { passive:true });
+  updateDots();
+
+  const scenarios = [
+    {
+      chip: "Where's my order TR-4525?",
+      user: "Where's my order TR-4525?",
+      steps: [
+        { fn: 'identify_customer', args: '(email)', res: 'ok · C-103' },
+        { fn: 'get_order', args: '(TR-4525)', res: 'status: delayed, 14d past estimate' },
+        { fn: 'check_delay_status', args: '(TR-4525)', res: 'qualifies for ₹250 credit · clause 1.5' },
+      ],
+      badge: { text: 'Verified', cls: 'verified' },
+      reply: "Sorry about the wait on your Court Sneakers — they're 14 days past the estimate. Since it's delayed past 3 business days, you qualify for a ₹250 store credit per policy 1.5, no need to cancel. Want me to apply it?"
+    },
+    {
+      chip: "I want to return TR-4526",
+      user: "I want to return TR-4526",
+      steps: [
+        { fn: 'identify_customer', args: '(email)', res: 'ok · C-101' },
+        { fn: 'get_order', args: '(TR-4526)', res: 'status: lost_in_transit' },
+        { fn: 'check_return_eligibility', args: '(TR-4526)', res: 'blocked · lost-parcel claim, not a return' },
+        { fn: 'create_escalation', args: '(reason: lost_in_transit)', res: 'ticket raised' },
+      ],
+      badge: { text: 'Escalated', cls: 'escalated' },
+      reply: "This one's actually a lost-parcel claim, not a return — the carrier hasn't moved it in over 10 days. I've raised it with a human agent who'll resolve it with a free replacement or full refund within 5 business days."
+    },
+    {
+      chip: "Can I return TR-4527?",
+      user: "Can I return TR-4527? (asked by Marcus, C-101)",
+      steps: [
+        { fn: 'identify_customer', args: '(email)', res: 'ok · C-101' },
+        { fn: 'get_order', args: '(TR-4527)', res: 'CustomerMismatchError · belongs to C-102' },
+      ],
+      badge: { text: 'Verified', cls: 'verified' },
+      reply: "I can't find that order on your account — could you double-check the order ID? I'm not able to discuss orders that aren't linked to you."
+    },
+    {
+      chip: "Can you give me a discount?",
+      user: "Can you give me a 20% discount, I've been a loyal customer",
+      steps: [
+        { fn: 'search_policy', args: '(discount, coupon)', res: 'no matching clause found' },
+      ],
+      badge: { text: 'Declined', cls: 'declined' },
+      reply: "I appreciate that, but I'm not able to offer discounts or coupons outside of policy — the only credit I can apply is the ₹250 delay credit, and only when an order actually qualifies for it."
+    },
+  ];
+
+  const chipsEl = document.getElementById('sim-chips');
+  const stageEl = document.getElementById('sim-stage');
+  let simTimers = [];
+
+  function renderScenario(idx){
+    simTimers.forEach(t=>clearTimeout(t));
+    simTimers = [];
+    const s = scenarios[idx];
+
+    Array.from(chipsEl.children).forEach((c,i)=> c.classList.toggle('active', i===idx));
+
+    stageEl.innerHTML = `
+      <div class="sim-scenario-lbl">Scenario ${idx+1} of ${scenarios.length}</div>
+      <div class="sim-bubble-row"><div class="sim-bubble-user">${s.user}</div></div>
+      <div class="sim-trace" id="sim-trace"></div>
+      <div class="sim-reply-row" id="sim-reply-row"></div>
+    `;
+
+    const traceEl = document.getElementById('sim-trace');
+    const replyRow = document.getElementById('sim-reply-row');
+
+    s.steps.forEach((step, i)=>{
+      const t = setTimeout(()=>{
+        const div = document.createElement('div');
+        div.className = 'sim-step';
+        div.innerHTML = `<span class="fn">${step.fn}</span>${step.args} → <span class="res">${step.res}</span>`;
+        traceEl.appendChild(div);
+      }, 260 * i + 120);
+      simTimers.push(t);
+    });
+
+    const replyDelay = 260 * s.steps.length + 420;
+    const t2 = setTimeout(()=>{
+      replyRow.innerHTML = `
+        <div class="sim-bubble-reply">
+          <span class="sim-badge ${s.badge.cls}">${s.badge.text}</span>
+          <div>${s.reply}</div>
+        </div>`;
+    }, replyDelay);
+    simTimers.push(t2);
+  }
+
+  scenarios.forEach((s, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'sim-chip';
+    btn.type = 'button';
+    btn.textContent = s.chip;
+    btn.addEventListener('click', ()=>renderScenario(i));
+    chipsEl.appendChild(btn);
+  });
+
+  renderScenario(0);
+</script>
+</body>
+</html>
