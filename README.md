@@ -5,7 +5,6 @@ returns/exchange eligibility, refunds, and shipping/policy questions — grounde
 in `data/trendly_policy.md` and `data/orders.json`, and escalates cleanly to a human when
 it should.
 
-Built for the Yellow.ai FDE (Intern) screening assignment.
 
 ---
 
