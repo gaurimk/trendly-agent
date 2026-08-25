@@ -5,13 +5,17 @@ returns/exchange eligibility, refunds, and shipping/policy questions — grounde
 in `data/trendly_policy.md` and `data/orders.json`, and escalates cleanly to a human when
 it should.
 
+Built for the Yellow.ai FDE (Intern) screening assignment.
+
+- **Live app:** https://trendly-agent-epy3.onrender.com
+- **Case study / write-up:** https://gaurimk.github.io/trendly-agent/ — architecture, trade-offs, and a scripted trace demo
 
 ---
 
 ## Quickstart
 
 ```bash
-git clone https://github.com/gaurimk/trendly-agent.git
+git clone https://github.com/gaurimk/trendly-agent
 cd trendly-agent
 python -m venv venv && source venv/bin/activate     # Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -67,7 +71,7 @@ tests/test_tools.py Offline unit tests against the deterministic core — zero
                     dependency on groq/fastapi, so they run without an API key.
 ```
 
-**Model:** `openai/gpt-oss-120b` on Groq's free API tier (no card required, rate-
+**Model:** `llama-3.3-70b-versatile` on Groq's free API tier (no card required, rate-
 limited but sufficient for a demo/evaluation — see SOLUTION.md for the production
 caveat). Configurable via `GROQ_MODEL`.
 
@@ -85,19 +89,13 @@ out of sync with the fixed dataset as real time passes, the app treats "today" a
 python -m unittest tests.test_tools -v
 ```
 
-29 tests, no API key required — covers all 10 fixed orders against their documented
+24 tests, no API key required — covers all 10 fixed orders against their documented
 edge cases (delayed, lost-in-transit, jewellery, final-sale, cancelled, partial
-shipment, clean happy path), the cross-customer authorization boundary, the
-policy-grounding contract, and the multi-turn session-state layer itself
-(`app.agent.Session` / `_dispatch_tool_call`): identify-once-then-reuse across
-calls, fail-closed before identification, and — the one that matters most —
-a forged `customer_id` in a tool-call argument being silently overridden by
-the session's real identity rather than trusted. That last guarantee is
-tested directly here rather than only asserted in the system prompt.
-See `tests/test_tools.py` for the full list; see `SOLUTION.md` for what this
-suite does *not* cover (a live multi-turn conversation against the actual
-Groq model, which needs a live key and isn't practical to assert
-deterministically against live LLM wording).
+shipment, clean happy path), plus the cross-customer authorization boundary and
+policy-grounding contract. See `tests/test_tools.py` for the full list; see
+`SOLUTION.md` for what this suite does *not* cover (full multi-turn conversations,
+which require a live Groq key and aren't practical to assert deterministically
+against a live LLM).
 
 ---
 
